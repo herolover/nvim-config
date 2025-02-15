@@ -21,6 +21,8 @@ setlocal spell spelllang=en_us
 
 lua<<EOF
 
+vim.api.nvim_create_user_command('BazelCompileCommands', '!bazel run @hedron_compile_commands//:refresh_all', {})
+
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
   vim.fn.system({
@@ -37,12 +39,23 @@ vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
 {
+  "FabijanZulj/blame.nvim",
+  config = function()
+    require("blame").setup()
+  end
+},
+{
+  "nvim-tree/nvim-tree.lua",
+  dependencies = { "nvim-tree/nvim-web-devicons" }
+},
+{
   "nvim-java/nvim-java",
   dependencies = {
     "nvim-java/lua-async-await",
     "nvim-java/nvim-java-core",
     "nvim-java/nvim-java-test",
     "nvim-java/nvim-java-dap",
+    "nvim-java/nvim-java-refactor",
     "MunifTanjim/nui.nvim",
     "neovim/nvim-lspconfig",
     "mfussenegger/nvim-dap",
@@ -81,12 +94,6 @@ require("lazy").setup({
 {
   "nvim-telescope/telescope-fzf-native.nvim",
   build = "cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build"
-},
-{
-  "FabijanZulj/blame.nvim",
-  config = function()
-    require("blame").setup()
-  end
 }})
 
 local on_attach = function(client, bufnr)
@@ -96,22 +103,21 @@ local on_attach = function(client, bufnr)
     local opts = { noremap = true, silent = true }
 
     buf_set_keymap('n', 'gD', '<cmd>lua vim.lsp.buf.declaration()<cr>', opts)
-    buf_set_keymap('n', 'gd', '<cmd>lua vim.lsp.buf.definition()<cr>', opts)
+    buf_set_keymap('n', 'gd', '<cmd>Telescope lsp_definitions<cr>', opts)
     buf_set_keymap('n', 'gi', '<cmd>lua vim.lsp.buf.implementation()<cr>', opts)
-    buf_set_keymap('n', 'gr', '<cmd>lua vim.lsp.buf.references()<cr>', opts)
+    buf_set_keymap('n', 'gr', '<cmd>Telescope lsp_references<cr>', opts)
+    buf_set_keymap('n', 'gR', '<cmd>lua vim.lsp.buf.rename()<cr>', opts)
     buf_set_keymap('n', '<space>ca', '<cmd>lua vim.lsp.buf.code_action()<cr>', opts)
     buf_set_keymap('n', '<space>f', '<cmd>lua vim.lsp.buf.format()<cr>', opts)
     buf_set_keymap('n', '<space>e', '<cmd>lua vim.diagnostic.open_float()<cr>', opts)
 end
 
-require('java').setup()
-
 require'lspconfig'.clangd.setup{
     on_attach = on_attach,
-    cmd = {'/usr/bin/clangd-16', '--background-index', '--compile-commands-dir=cmake-build'},
+    cmd = {'clangd', '--background-index'},
 }
 
-require'lspconfig'.pylsp.setup{
+require'lspconfig'.pyright.setup{
     on_attach = on_attach,
 }
 
@@ -156,6 +162,35 @@ require('lualine').setup{
 }
 require('nvim-web-devicons').setup()
 
+require("nvim-tree").setup({
+  sort = {
+    sorter = "case_sensitive",
+  },
+  view = {
+    float = {
+      enable = true,
+      open_win_config = {
+        width = 150,
+        height = 40,
+      }
+    }
+  },
+  renderer = {
+    group_empty = true,
+  },
+  filters = {
+    dotfiles = true,
+  },
+})
+
+vim.filetype.add {
+  extension = {
+    jinja = 'jinja',
+    jinja2 = 'jinja',
+    j2 = 'jinja',
+  },
+}
+
 EOF
 
 colorscheme nordfox
@@ -169,6 +204,7 @@ nnoremap <leader>d <cmd>Telescope diagnostics<cr>
 nnoremap <leader>r <cmd>Telescope resume<cr>
 nnoremap <leader>p <cmd>:cp<cr>
 nnoremap <leader>n <cmd>:cn<cr>
+nnoremap <leader>t <cmd>NvimTreeFindFileToggle<cr>
 
 inoremap jj <esc>
 inoremap <C-s> <cmd>update<cr><esc>
