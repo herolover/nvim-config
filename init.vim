@@ -39,6 +39,10 @@ vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
 {
+  "Exafunction/windsurf.vim",
+  event = "BufEnter"
+},
+{
   "FabijanZulj/blame.nvim",
   config = function()
     require("blame").setup()
@@ -96,33 +100,45 @@ require("lazy").setup({
   build = "cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build"
 }})
 
-local on_attach = function(client, bufnr)
-    local function buf_set_keymap(...) vim.api.nvim_buf_set_keymap(bufnr, ...) end
-    local function buf_set_option(...) vim.api.nvim_buf_set_option(bufnr, ...) end
+vim.keymap.set('n', '<leader>f', '<cmd>Telescope find_files<cr>', { silent = true })
+vim.keymap.set('n', '<leader>l', '<cmd>Telescope live_grep<cr>', { silent = true })
+vim.keymap.set('n', '<leader>w', '<cmd>Telescope grep_string<cr>', { silent = true })
+vim.keymap.set('n', '<leader>g', '<cmd>Telescope git_files<cr>', { silent = true })
+vim.keymap.set('n', '<leader>b', '<cmd>Telescope buffers<cr>', { silent = true })
+vim.keymap.set('n', '<leader>d', '<cmd>Telescope diagnostics<cr>', { silent = true })
+vim.keymap.set('n', '<leader>r', '<cmd>Telescope resume<cr>', { silent = true })
+vim.keymap.set('n', '<leader>p', '<cmd>cp<cr>', { silent = true })
+vim.keymap.set('n', '<leader>n', '<cmd>cn<cr>', { silent = true })
+vim.keymap.set('n', '<leader>t', '<cmd>NvimTreeFindFileToggle<cr>', { silent = true })
 
-    local opts = { noremap = true, silent = true }
+vim.keymap.set('i', 'jj', '<esc>')
+vim.keymap.set('i', '<C-s>', '<cmd>update<cr><esc>', { silent = true })
+vim.keymap.set('n', '<C-s>', '<cmd>update<cr>', { silent = true })
+vim.keymap.set('n', '<leader>s', '<cmd>LspClangdSwitchSourceHeader<cr>', { silent = true })
 
-    buf_set_keymap('n', 'gD', '<cmd>lua vim.lsp.buf.declaration()<cr>', opts)
-    buf_set_keymap('n', 'gd', '<cmd>Telescope lsp_definitions<cr>', opts)
-    buf_set_keymap('n', 'gi', '<cmd>lua vim.lsp.buf.implementation()<cr>', opts)
-    buf_set_keymap('n', 'gr', '<cmd>Telescope lsp_references<cr>', opts)
-    buf_set_keymap('n', 'gR', '<cmd>lua vim.lsp.buf.rename()<cr>', opts)
-    buf_set_keymap('n', '<space>ca', '<cmd>lua vim.lsp.buf.code_action()<cr>', opts)
-    buf_set_keymap('n', '<space>f', '<cmd>lua vim.lsp.buf.format()<cr>', opts)
-    buf_set_keymap('n', '<space>e', '<cmd>lua vim.diagnostic.open_float()<cr>', opts)
-end
+vim.api.nvim_create_autocmd('LspAttach', {
+    callback = function(args)
+        local opts = { noremap = true, silent = true, buffer = args.buf }
 
-require'lspconfig'.clangd.setup{
-    on_attach = on_attach,
-    cmd = {'clangd', '--background-index'},
+        vim.keymap.set('n', 'gD', '<cmd>lua vim.lsp.buf.declaration()<cr>', opts)
+        vim.keymap.set('n', 'gd', '<cmd>Telescope lsp_definitions<cr>', opts)
+        vim.keymap.set('n', 'gi', '<cmd>lua vim.lsp.buf.implementation()<cr>', opts)
+        vim.keymap.set('n', 'gr', '<cmd>Telescope lsp_references<cr>', opts)
+        vim.keymap.set('n', 'gR', '<cmd>lua vim.lsp.buf.rename()<cr>', opts)
+        vim.keymap.set('n', '<space>ca', '<cmd>lua vim.lsp.buf.code_action()<cr>', opts)
+        vim.keymap.set('n', '<space>f', '<cmd>lua vim.lsp.buf.format()<cr>', opts)
+        vim.keymap.set('n', '<space>e', '<cmd>lua vim.diagnostic.open_float()<cr>', opts)
+    end
+})
+
+vim.lsp.config.clangd = {
+    cmd = {'/usr/bin/clangd-19', '--background-index'},
 }
+vim.lsp.enable("clangd")
 
-require'lspconfig'.pyright.setup{
-    on_attach = on_attach,
-}
+vim.lsp.enable("pyright")
 
-require('lspconfig').jdtls.setup({
-    on_attach = on_attach,
+vim.lsp.config.jdtls = {
     settings = {
         java = {
             format = {
@@ -142,7 +158,8 @@ require('lspconfig').jdtls.setup({
             }
         }
     }
-})
+}
+vim.lsp.enable("jdtls")
 
 require('telescope').setup({
     defaults = {
@@ -179,7 +196,7 @@ require("nvim-tree").setup({
     group_empty = true,
   },
   filters = {
-    dotfiles = true,
+    dotfiles = false,
   },
 })
 
@@ -194,20 +211,3 @@ vim.filetype.add {
 EOF
 
 colorscheme nordfox
-
-nnoremap <leader>f <cmd>Telescope find_files<cr>
-nnoremap <leader>l <cmd>Telescope live_grep<cr>
-nnoremap <leader>w <cmd>Telescope grep_string<cr>
-nnoremap <leader>g <cmd>Telescope git_files<cr>
-nnoremap <leader>b <cmd>Telescope buffers<cr>
-nnoremap <leader>d <cmd>Telescope diagnostics<cr>
-nnoremap <leader>r <cmd>Telescope resume<cr>
-nnoremap <leader>p <cmd>:cp<cr>
-nnoremap <leader>n <cmd>:cn<cr>
-nnoremap <leader>t <cmd>NvimTreeFindFileToggle<cr>
-
-inoremap jj <esc>
-inoremap <C-s> <cmd>update<cr><esc>
-noremap <C-s> <cmd>update<cr>
-nnoremap <leader>s <cmd>ClangdSwitchSourceHeader<cr>
-
