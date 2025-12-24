@@ -132,7 +132,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
 })
 
 vim.lsp.config.clangd = {
-    cmd = {'/usr/bin/clangd-19', '--background-index'},
+    cmd = {'/usr/bin/clangd', '--background-index'},
 }
 vim.lsp.enable("clangd")
 
